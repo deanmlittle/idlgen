@@ -18,3 +18,7 @@ You can explore the different build options using the help command:
 ```sh
 idlgen --help
 ```
+
+# Credits
+
+A special thanks to @JuanMarchetto for his IDL types!
