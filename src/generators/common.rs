@@ -1,7 +1,7 @@
 use convert_case::{Case, Casing};
 use sha2::{Digest, Sha256};
 
-use crate::{generators::{cpi::{make_cpi_accounts, make_cpi_ctxs}, i11n::make_i11n_ctxs}, types::Instruction, IDL};
+use crate::{generators::{cpi::{make_cpi_accounts, make_cpi_ctxs}, i11n::make_i11n_ctxs}, types::Instruction, Sdk, IDL};
 
 pub fn make_defined_types(idl: &IDL) -> String {
     idl.types.iter().map(|t| {
@@ -67,10 +67,22 @@ pub fn make_ix_has_info(ix: &Instruction) -> String {
     }
 }
 
-pub fn make_sdk(idl: &IDL) -> String {
+pub fn make_sdk(idl: &IDL, sdk: &Sdk) -> String {
     let accounts = make_cpi_accounts(idl);
-    let ctxs = make_cpi_ctxs(idl);
-    let i11n = make_i11n_ctxs(idl); 
+    let cpi = match sdk {
+        &Sdk::CPI | &Sdk::Full => format!("
+// CPI
+{}
+", make_cpi_ctxs(idl)),
+        &Sdk::I11n => String::new()
+    };
+    let i11n = match sdk {
+        &Sdk::I11n | &Sdk::Full => format!("
+// I11n
+{}
+", make_i11n_ctxs(idl)),
+        &Sdk::CPI => String::new()
+    };
     let ixs = make_ixs(idl);
     let defined_types = make_defined_types(idl);
 
@@ -80,16 +92,10 @@ declare_id!(\"{}\");
 
 // Accounts
 {}
-
-// CPI
-{}
-
-// I11n
-{}
-
+{}{}
 // Instructions
 {}
         
 // Defined types
-{}", idl.metadata.address, accounts, ctxs, i11n, ixs, defined_types)
+{}", idl.metadata.address, accounts, cpi, i11n, ixs, defined_types)
 }

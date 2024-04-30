@@ -22,7 +22,6 @@ pub fn make_i11n_ctxs(idl: &IDL) -> String {
     use anchor_lang::prelude::*;
     use anchor_i11n::prelude::*;
     use super::{{instructions::*, ID}};
-
 {}
 
     //Accounts
