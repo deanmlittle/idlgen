@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io::{BufReader, Write};
-use std::path::Path;
 use anyhow::Result;
 use clap::Parser;
 use convert_case::{Case, Casing};

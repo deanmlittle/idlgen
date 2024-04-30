@@ -1,7 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types)]
 
 use serde::{self, Deserialize, Serialize};
-use std::{any::Any, str::FromStr, convert::From, fmt::format};
+use std::convert::From;
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct IDL {
     pub version: String,
@@ -298,7 +298,7 @@ impl ToString for InstructionType {
             InstructionType::U8 => "u8".to_string(),
             InstructionType::Vec(t) => format!("Vec<{}>", t.to_string()),
             InstructionType::HashMap(t1, t2) => format!("HashMap<{}, {}>", t1.to_string(), t2.to_string()),
-            InstructionType::BTreeMap(t1, t2) => todo!(),
+            InstructionType::BTreeMap(t1, t2) => format!("BTreeMap<{}, {}>", t1.to_string(), t2.to_string()),
             InstructionType::HashSet(t) => format!("HashSet<{}>", t.to_string()),
             InstructionType::BTreeSet(t) => format!("BTreeSet<{}>", t.to_string()),
         }
