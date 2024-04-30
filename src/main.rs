@@ -90,7 +90,7 @@ fn make(idl: &IDL, sdk: &Sdk, package: &Package) -> Result<()> {
             zip.finish()?;
         },
     }
-    println!("✅ Successfully generated {} {} for {} v{}", package.to_string(), sdk.to_string(), idl.name, idl.version);
+    println!("✅ Successfully generated {} {} for {} v{}", sdk.to_string(), package.to_string(), idl.name, idl.version);
     Ok(())
 }
 
