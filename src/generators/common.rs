@@ -68,12 +68,14 @@ pub fn make_ix_has_info(ix: &Instruction) -> String {
 }
 
 pub fn make_sdk(idl: &IDL, sdk: &Sdk) -> String {
-    let accounts = make_cpi_accounts(idl);
     let cpi = match sdk {
         &Sdk::CPI | &Sdk::Full => format!("
+// Accounts
+{}
+
 // CPI
 {}
-", make_cpi_ctxs(idl)),
+", make_cpi_accounts(idl), make_cpi_ctxs(idl)),
         &Sdk::I11n => String::new()
     };
     let i11n = match sdk {
@@ -89,13 +91,10 @@ pub fn make_sdk(idl: &IDL, sdk: &Sdk) -> String {
     format!("use anchor_lang::prelude::*;
 
 declare_id!(\"{}\");
-
-// Accounts
-{}
 {}{}
 // Instructions
 {}
         
 // Defined types
-{}", idl.metadata.address, accounts, cpi, i11n, ixs, defined_types)
+{}", idl.metadata.address, cpi, i11n, ixs, defined_types)
 }
