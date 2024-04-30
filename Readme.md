@@ -11,7 +11,7 @@ cargo install --git https://github.com/deanmlittle/anchor-idlgen
 
 Then run it against an IDL file like so:
 ```sh
-idlgen --filename jupiter.json --pacakge crate
+idlgen --filename jupiter.json --package crate
 ```
 
 You can explore the different build options using the help command:
