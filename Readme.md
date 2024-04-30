@@ -21,4 +21,4 @@ idlgen --help
 
 # Credits
 
-A special thanks to :- [@JuanMarchetto] (https://github.com/JuanMarchetto) for his IDL types!
+A special thanks to [@JuanMarchetto](https://github.com/JuanMarchetto) for his IDL types!
