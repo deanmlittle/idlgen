@@ -1,12 +1,14 @@
 use std::fs::File;
 use std::io::{BufReader, Write};
-use std::str::FromStr;
+use std::path::Path;
 use anyhow::Result;
 use clap::Parser;
 use convert_case::{Case, Casing};
-use generators::common::make_sdk;
+use generators::common::{make_cargo_toml, make_lib_rs};
 use serde::Serialize;
 use types::IDL;
+use zip::write::FileOptions;
+use zip::ZipWriter;
 mod types;
 mod generators;
 
@@ -51,8 +53,24 @@ struct Args {
 }
 
 fn make(idl: &IDL, sdk: &Sdk, package: &Package) -> Result<()> {
-    let mut file = File::create(format!("{}.rs", idl.name.to_case(Case::Snake)))?;
-    file.write_all(make_sdk(idl, sdk).as_bytes())?;
+    match package {
+        Package::File => {
+            let mut file = File::create(format!("{}.rs", idl.name.to_case(Case::Snake)))?;
+            file.write_all(make_lib_rs(idl, sdk).as_bytes())?;
+        },
+        Package::Crate => {
+            let file = File::create(format!("{}.zip", idl.name.to_case(Case::Snake)))?;
+
+            let mut zip = ZipWriter::new(file);
+
+            zip.start_file("Cargo.toml", FileOptions::default())?;
+            zip.write_all(make_cargo_toml(idl, sdk).as_bytes())?;
+            zip.add_directory("src", FileOptions::default())?;
+            zip.start_file("src/lib.rs", FileOptions::default())?;
+            zip.write_all(make_lib_rs(idl, sdk).as_bytes())?;
+            zip.finish()?;
+        },
+    }
     Ok(())
 }
 

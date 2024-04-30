@@ -67,7 +67,26 @@ pub fn make_ix_has_info(ix: &Instruction) -> String {
     }
 }
 
-pub fn make_sdk(idl: &IDL, sdk: &Sdk) -> String {
+pub fn make_cargo_toml(idl: &IDL, sdk: &Sdk) -> String {
+    let i11n = match sdk {
+        Sdk::I11n | Sdk::Full => "\nanchor-i11n = { git = \"https://github.com/deanmlittle/anchor-i11n.git\" }".to_string(),
+        Sdk::CPI => String::new()
+    };
+    format!("[package]
+name = \"{}-sdk\"
+version = \"{}\"
+description = \"Created with Anchor-IDLGen\"
+edition = \"2021\"
+
+[lib]
+crate-type = [\"cdylib\", \"lib\"]
+name = \"{}_sdk\"
+
+[dependencies]
+anchor-lang = \"0.30.0\"{}", idl.name.to_case(Case::Kebab), idl.version, idl.name.to_case(Case::Snake), i11n)
+}
+
+pub fn make_lib_rs(idl: &IDL, sdk: &Sdk) -> String {
     let cpi = match sdk {
         &Sdk::CPI | &Sdk::Full => format!("
 // Accounts
