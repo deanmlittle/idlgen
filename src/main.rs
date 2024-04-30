@@ -26,6 +26,16 @@ pub enum Sdk {
     CPI,
 }
 
+impl ToString for Sdk {
+    fn to_string(&self) -> String {
+        match self {
+            Sdk::Full => "full".to_string(),
+            Sdk::I11n => "i11n".to_string(),
+            Sdk::CPI => "CPI".to_string(),
+        }
+    }
+}
+
 #[derive(
     clap::ValueEnum, Clone, Default, Debug, Serialize,
 )]
@@ -36,6 +46,15 @@ pub enum Package {
     File,
     /// A usable crate
     Crate,
+}
+
+impl ToString for Package {
+    fn to_string(&self) -> String {
+        match self {
+            Package::File => "file".to_string(),
+            Package::Crate => "crate".to_string(),
+        }
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -71,6 +90,7 @@ fn make(idl: &IDL, sdk: &Sdk, package: &Package) -> Result<()> {
             zip.finish()?;
         },
     }
+    println!("✅ Successfully generated {} {} for {} v{}", package.to_string(), sdk.to_string(), idl.name, idl.version);
     Ok(())
 }
 
@@ -82,6 +102,5 @@ fn main() -> Result<()> {
     let idl: IDL = serde_json::from_reader(reader)?;
 
     make(&idl, &args.sdk, &args.package)?;
-
     Ok(())
 }
