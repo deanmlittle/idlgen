@@ -1,0 +1,3 @@
+/target
+*.idl.json
+.DS_Store
