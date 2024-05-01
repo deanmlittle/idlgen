@@ -30,12 +30,21 @@ pub fn make_ixs(idl: &IDL) -> String {
 
 {}        
 }}",
-        idl.instructions.iter().map(|i| {
-        let ix_name_pascal =  i.name.to_case(Case::Pascal);
+        idl.instructions.iter().map(|ix| {
+        let ix_name_pascal =  ix.name.to_case(Case::Pascal);
         format!("    #[derive(AnchorSerialize, AnchorDeserialize)]
     pub struct {} {{
 {}
-    }}", ix_name_pascal, i.args.iter().map(|a| format!("        pub {}: {},", a.name.to_case(Case::Snake), a.kind.to_string())).collect::<Vec<String>>().join("\n"))
+    }}
+    
+    impl Discriminator for {} {{
+        const DISCRIMINATOR: [u8; 8] = [{}];
+        fn discriminator() -> [u8; 8] {{
+            Self::DISCRIMINATOR
+        }}
+    }}", 
+    ix_name_pascal, 
+    ix.args.iter().map(|a| format!("        pub {}: {},", a.name.to_case(Case::Snake), a.kind.to_string())).collect::<Vec<String>>().join("\n"), ix_name_pascal, make_ix_discriminator(ix))
         }).collect::<Vec<String>>().join("\n\n")
     )
 }

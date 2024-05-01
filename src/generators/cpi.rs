@@ -1,4 +1,4 @@
-use crate::{generators::common::{make_ix_arg_names, make_ix_args, make_ix_discriminator, make_ix_has_info}, IDL};
+use crate::{generators::common::{make_ix_arg_names, make_ix_args, make_ix_has_info}, IDL};
 use convert_case::{Casing, Case};
 
 pub fn make_cpi_ctxs(idl: &IDL) -> String {
@@ -14,7 +14,6 @@ pub fn make_cpi_ctxs(idl: &IDL) -> String {
         let ix_has_info = make_ix_has_info(ix);
         let ix_args = make_ix_args(ix);
         let ix_arg_names = make_ix_arg_names(ix);
-        let discriminator = make_ix_discriminator(ix);
 
         format!("    pub fn {}<'a, 'b, 'c, 'info>(
         ctx: CpiContext<'a, 'b, 'c, 'info, {}{}>{}
@@ -22,7 +21,7 @@ pub fn make_cpi_ctxs(idl: &IDL) -> String {
         let ix = {{
             let ix = instructions::{} {{ {} }};
             let mut data = Vec::with_capacity(256);
-            data.extend_from_slice(&{});
+            data.extend_from_slice(&instructions::{}::DISCRIMINATOR);
             AnchorSerialize::serialize(&ix, &mut data)
                 .map_err(|_| anchor_lang::error::ErrorCode::InstructionDidNotSerialize)?;
             let accounts = ctx.to_account_metas(None);
@@ -35,7 +34,7 @@ pub fn make_cpi_ctxs(idl: &IDL) -> String {
         let mut acc_infos = ctx.to_account_infos();
         anchor_lang::solana_program::program::invoke_signed(&ix, &acc_infos, ctx.signer_seeds)
             .map_or_else(|e| Err(Into::into(e)), |_| Ok(()))
-    }}", ix_name_snake, ix_name_pascal, ix_has_info, ix_args, ix_name_pascal, ix_arg_names, discriminator)
+    }}", ix_name_snake, ix_name_pascal, ix_has_info, ix_args, ix_name_pascal, ix_arg_names, ix_name_pascal)
         }).collect::<Vec<String>>().join("\n\n")
     )
 }
@@ -60,7 +59,7 @@ pub struct {}<'info> {{
             (true, false) => "    #[account(mut)]\n",
             (false, false) => ""
         };
-        format!("{}    pub {}: {},", constraints, a.name.to_case(Case::Snake), kind)
+        format!("{}    /// CHECK: Skip check\n    pub {}: {},", constraints, a.name.to_case(Case::Snake), kind)
         }).collect::<Vec<String>>().join("\n"))
     }).collect::<Vec<String>>().join("\n\n")
 }
