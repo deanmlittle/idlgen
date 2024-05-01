@@ -41,9 +41,9 @@ impl ToString for Sdk {
 #[serde(rename_all = "kebab-case")]
 pub enum Package {
     /// A single file
-    #[default]
     File,
-    /// A usable crate
+    /// A production-ready crate
+    #[default]
     Crate,
 }
 
