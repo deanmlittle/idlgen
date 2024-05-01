@@ -1,5 +1,5 @@
 use convert_case::{Case, Casing};
-use crate::{generators::common::make_ix_has_info, IDL};
+use crate::{generators::common::{make_ix_has_info, make_ix_has_info_colon2}, IDL};
 
 pub fn make_i11n_accounts(idl: &IDL) -> String {
     idl.instructions.iter().map(|ix| {
@@ -33,10 +33,11 @@ idl.instructions.iter().map(|ix| {
         format!("
     // {}
     #[derive(TryFromInstruction)]
-    pub struct {}I11n{} {{
+    pub struct {}I11n<'info> {{
         pub accounts: {}AccountMetas{},
-        pub args: {}
-    }}", ix_name_pascal, ix_name_pascal, make_ix_has_info(ix), ix_name_pascal, make_ix_has_info(ix), ix_name_pascal)
+        pub args: {},
+        pub remaining_accounts: Vec<&'info AccountMeta>,
+    }}", ix_name_pascal, ix_name_pascal, ix_name_pascal, make_ix_has_info_colon2(ix), ix_name_pascal)
         }).collect::<Vec<String>>().join("\n"),
         make_i11n_accounts(idl)
     )

@@ -1,5 +1,4 @@
 use convert_case::{Case, Casing};
-use sha2::{Digest, Sha256};
 
 use crate::{generators::{cpi::{make_cpi_accounts, make_cpi_ctxs}, i11n::make_i11n_ctxs}, types::Instruction, Sdk, IDL};
 
@@ -26,25 +25,20 @@ pub struct {} {{
 
 pub fn make_ixs(idl: &IDL) -> String {
     format!("pub mod instructions {{
+    use anchor_lang::prelude::*;
+    use anchor_i11n::prelude::*;
     use super::*;
 
 {}        
 }}",
         idl.instructions.iter().map(|ix| {
         let ix_name_pascal =  ix.name.to_case(Case::Pascal);
-        format!("    #[derive(AnchorSerialize, AnchorDeserialize)]
+        format!("    #[derive(AnchorDiscriminator, AnchorSerialize, AnchorDeserialize)]
     pub struct {} {{
 {}
-    }}
-    
-    impl Discriminator for {} {{
-        const DISCRIMINATOR: [u8; 8] = [{}];
-        fn discriminator() -> [u8; 8] {{
-            Self::DISCRIMINATOR
-        }}
     }}", 
     ix_name_pascal, 
-    ix.args.iter().map(|a| format!("        pub {}: {},", a.name.to_case(Case::Snake), a.kind.to_string())).collect::<Vec<String>>().join("\n"), ix_name_pascal, make_ix_discriminator(ix))
+    ix.args.iter().map(|a| format!("        pub {}: {},", a.name.to_case(Case::Snake), a.kind.to_string())).collect::<Vec<String>>().join("\n"))
         }).collect::<Vec<String>>().join("\n\n")
     )
 }
@@ -61,18 +55,24 @@ pub fn make_ix_arg_names(ix: &Instruction) -> String {
     ix.args.iter().map(|a| a.name.to_case(Case::Snake)).collect::<Vec<String>>().join(", ")
 }
 
-pub fn make_ix_discriminator(ix: &Instruction) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(format!("global:{}", ix.name.to_case(Case::Snake)).as_bytes());
-    let mut b: [u8;8] = [0u8;8];
-    b.clone_from_slice(&hasher.finalize().to_vec()[..8]);
-    format!("[{},{},{},{},{},{},{},{}]", b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7])
-}
-
 pub fn make_ix_has_info(ix: &Instruction) -> String {
     match ix.accounts.len() == 0 {
         true => String::new(),
         false => "<'info>".to_string()
+    }
+}
+
+pub fn make_ix_has_info_inline(ix: &Instruction) -> String {
+    match ix.accounts.len() == 0 {
+        true => String::new(),
+        false => "'info ".to_string()
+    }
+}
+
+pub fn make_ix_has_info_colon2(ix: &Instruction) -> String {
+    match ix.accounts.len() == 0 {
+        true => String::new(),
+        false => "::<'info>".to_string()
     }
 }
 
