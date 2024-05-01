@@ -62,13 +62,6 @@ pub fn make_ix_has_info(ix: &Instruction) -> String {
     }
 }
 
-pub fn make_ix_has_info_inline(ix: &Instruction) -> String {
-    match ix.accounts.len() == 0 {
-        true => String::new(),
-        false => "'info ".to_string()
-    }
-}
-
 pub fn make_ix_has_info_colon2(ix: &Instruction) -> String {
     match ix.accounts.len() == 0 {
         true => String::new(),
