@@ -1,16 +1,16 @@
 use convert_case::{Case, Casing};
 
-use crate::{generators::{cpi::{make_cpi_accounts, make_cpi_ctxs}, i11n::make_i11n_ctxs}, types::Instruction, Sdk, IDL};
+use crate::{generators::{accounts::make_accounts, cpi::{make_cpi_accounts, make_cpi_ctxs}, i11n::make_i11n_ctxs}, types::Instruction, Sdk, IDL};
 
 pub fn make_defined_types(idl: &IDL) -> String {
     idl.types.iter().map(|t| {
         let ty = if t.kind.kind == "enum" {
-    format!("#[derive(AnchorSerialize, AnchorDeserialize)]
+    format!("#[derive(Clone, AnchorSerialize, AnchorDeserialize, Copy, PartialEq, Eq)]
 pub enum {} {{
 {}
 }}", t.name, t.kind.variants.clone().unwrap_or(vec![]).iter().map(|n| format!("    {}", n.name.to_case(Case::Pascal))).collect::<Vec<String>>().join(",\n"))
         } else if t.kind.kind == "struct" {
-            format!("#[derive(AnchorSerialize, AnchorDeserialize)]
+            format!("#[derive(Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct {} {{
 {}
 }}", t.name, t.kind.fields.clone().unwrap_or(vec![]).iter().map(|f| {
@@ -101,6 +101,7 @@ pub fn make_lib_rs(idl: &IDL, sdk: &Sdk) -> String {
     };
     let ixs = make_ixs(idl);
     let defined_types = make_defined_types(idl);
+    let accounts = make_accounts(idl);
 
     format!("use anchor_lang::prelude::*;
 
@@ -108,7 +109,10 @@ declare_id!(\"{}\");
 {}{}
 // Instructions
 {}
+
+// Accounts
+{}
         
 // Defined types
-{}", idl.metadata.address, cpi, i11n, ixs, defined_types)
+{}", idl.metadata.address, cpi, i11n, ixs, accounts, defined_types)
 }
