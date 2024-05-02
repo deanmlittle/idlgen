@@ -62,13 +62,6 @@ pub fn make_ix_has_info(ix: &Instruction) -> String {
     }
 }
 
-pub fn make_ix_has_info_colon2(ix: &Instruction) -> String {
-    match ix.accounts.len() == 0 {
-        true => String::new(),
-        false => "::<'info>".to_string()
-    }
-}
-
 pub fn make_cargo_toml(idl: &IDL, sdk: &Sdk) -> String {
     let i11n = match sdk {
         Sdk::I11n | Sdk::Full => "\nanchor-i11n = { git = \"https://github.com/deanmlittle/anchor-i11n.git\" }".to_string(),

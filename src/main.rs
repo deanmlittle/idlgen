@@ -62,6 +62,9 @@ struct Args {
     /// Filename of IDL file
     #[arg(short, long)]
     filename: String,
+    /// Filename of IDL file
+    #[arg(short, long, default = "./".to_string())]
+    output: String,
     /// SDK Type (Full, I11n or CPI)
     #[clap(short, long, default_value_t, value_enum)]
     sdk: Sdk,
