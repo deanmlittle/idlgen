@@ -1,6 +1,6 @@
 use convert_case::{Case, Casing};
 
-use crate::{generators::{accounts::make_accounts, cpi::{make_cpi_accounts, make_cpi_ctxs}, i11n::make_i11n_ctxs, rpc::make_rpc_accounts}, types::Instruction, Sdk, IDL};
+use crate::{generators::{accounts::make_accounts, cpi::{make_cpi_accounts, make_cpi_ctxs}, events::make_events, i11n::make_i11n_ctxs, rpc::make_rpc_accounts}, types::Instruction, Sdk, IDL};
 
 pub fn make_defined_types(idl: &IDL) -> String {
     idl.types.iter().map(|t| {
@@ -100,15 +100,19 @@ name = \"{}_sdk\"
 rpc = []
 i11n = []
 cpi = []
-default = [\"rpc\", \"i11n\", \"cpi\"]
+events = []
+default = [\"rpc\", \"i11n\", \"cpi\", \"events\"]
 
 [dependencies]
 anchor-lang = \"0.30.0\"{}", idl.name.to_case(Case::Kebab), idl.version, idl.name.to_case(Case::Snake), i11n)
 }
 
 pub fn make_lib_rs(idl: &IDL, sdk: &Sdk) -> String {
-    let cpi = match sdk {
-        &Sdk::CPI | &Sdk::Full => format!("
+
+format!("use anchor_lang::prelude::*;
+
+declare_id!(\"{}\");
+
 // Accounts
 {}
 
@@ -123,31 +127,27 @@ pub mod rpc {{
     use anchor_lang::prelude::*;
 {}
 }}
-", make_cpi_accounts(idl), make_cpi_ctxs(idl), make_rpc_accounts(idl)),
-        &Sdk::I11n => String::new()
-    };
-    let i11n = match sdk {
-        &Sdk::I11n | &Sdk::Full => format!("
+
 // I11n
 #[cfg(feature=\"i11n\")]
 {}
-", make_i11n_ctxs(idl)),
-        &Sdk::CPI => String::new()
-    };
-    let ixs = make_ixs(idl);
-    let defined_types = make_defined_types(idl);
-    let accounts = make_accounts(idl);
 
-    format!("use anchor_lang::prelude::*;
-
-declare_id!(\"{}\");
-{}{}
 // Instructions
 {}
+
+// Events
+#[cfg(feature=\"events\")]
+pub mod events {{
+    use super::*;
+    use anchor_i11n::AnchorDiscriminator;
+    use anchor_lang::Discriminator;
+
+{}
+}}
 
 // Accounts
 {}
         
 // Defined types
-{}", idl.metadata.address, cpi, i11n, ixs, accounts, defined_types)
+{}", idl.metadata.address, make_cpi_accounts(idl), make_cpi_ctxs(idl), make_rpc_accounts(idl), make_i11n_ctxs(idl), make_ixs(idl), make_events(idl), make_accounts(idl), make_defined_types(idl))
 }
