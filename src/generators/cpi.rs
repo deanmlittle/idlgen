@@ -4,7 +4,7 @@ use convert_case::{Casing, Case};
 pub fn make_cpi_ctxs(idl: &IDL) -> String {
     format!("pub mod cpi {{
     #![allow(unused)]
-    use anchor_i11n::Discriminator;
+    use anchor_lang::Discriminator;
     use super::*;
 
 {}  

@@ -21,6 +21,7 @@ pub fn make_i11n_ctxs(idl: &IDL) -> String {
     format!("pub mod i11n {{
     use anchor_lang::prelude::*;
     use anchor_i11n::prelude::*;
+    use anchor_lang::Discriminator;
     use super::{{instructions::*, ID}};
 {}
 

@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs::{create_dir_all, File};
 use std::io::{BufReader, Write};
 use anyhow::Result;
 use clap::Parser;
@@ -45,6 +45,8 @@ pub enum Package {
     /// A production-ready crate
     #[default]
     Crate,
+
+    Zip,
 }
 
 impl ToString for Package {
@@ -52,6 +54,7 @@ impl ToString for Package {
         match self {
             Package::File => "file".to_string(),
             Package::Crate => "crate".to_string(),
+            Package::Zip => "zip".to_string(),
         }
     }
 }
@@ -77,6 +80,14 @@ fn make(idl: &IDL, sdk: &Sdk, package: &Package) -> Result<()> {
             file.write_all(make_lib_rs(idl, sdk).as_bytes())?;
         },
         Package::Crate => {
+            create_dir_all(format!("{}/src", idl.name.to_case(Case::Snake)))?;
+            let mut toml_file: File = File::create(format!("{}/Cargo.toml", idl.name.to_case(Case::Snake)))?;
+            toml_file.write_all(make_cargo_toml(idl, sdk).as_bytes())?;
+
+            let mut lib_file: File = File::create(format!("{}/src/lib.rs", idl.name.to_case(Case::Snake)))?;
+            lib_file.write_all(make_lib_rs(idl, sdk).as_bytes())?;
+        },
+        Package::Zip => {
             let file = File::create(format!("{}.zip", idl.name.to_case(Case::Snake)))?;
 
             let mut zip = ZipWriter::new(file);
