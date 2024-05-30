@@ -1,6 +1,6 @@
 use convert_case::{Case, Casing};
 
-use crate::{generators::{accounts::make_accounts, cpi::{make_cpi_accounts, make_cpi_ctxs}, events::make_events, i11n::make_i11n_ctxs, rpc::make_rpc_accounts}, types::Instruction, Sdk, IDL};
+use crate::{generators::{accounts::make_accounts, cpi::{make_cpi_accounts, make_cpi_ctxs}, events::make_events, i11n::make_i11n_ctxs, rpc::make_rpc_accounts}, types::Instruction, IDL};
 
 pub fn make_defined_types(idl: &IDL) -> String {
     idl.types.iter().map(|t| {
@@ -81,11 +81,7 @@ pub fn make_ix_has_info(ix: &Instruction) -> String {
     }
 }
 
-pub fn make_cargo_toml(idl: &IDL, sdk: &Sdk) -> String {
-    let i11n = match sdk {
-        Sdk::I11n | Sdk::Full => "\nanchor-i11n = \"0.1.0\"".to_string(),
-        Sdk::CPI => String::new()
-    };
+pub fn make_cargo_toml(idl: &IDL) -> String {
     format!("[package]
 name = \"{}-sdk\"
 version = \"{}\"
@@ -104,10 +100,11 @@ events = []
 default = [\"rpc\", \"i11n\", \"cpi\", \"events\"]
 
 [dependencies]
-anchor-lang = \"0.30.0\"{}", idl.name.to_case(Case::Kebab), idl.version, idl.name.to_case(Case::Snake), i11n)
+anchor-lang = \"0.30.0\"
+anchor-i11n = \"0.1.0\"", idl.name.to_case(Case::Kebab), idl.version, idl.name.to_case(Case::Snake))
 }
 
-pub fn make_lib_rs(idl: &IDL, sdk: &Sdk) -> String {
+pub fn make_lib_rs(idl: &IDL) -> String {
 
 format!("use anchor_lang::prelude::*;
 
