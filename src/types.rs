@@ -1,11 +1,17 @@
 #![allow(non_snake_case, non_camel_case_types)]
 
 use serde::{self, Deserialize, Serialize};
+use serde_json::Value;
+use core::panic;
 use std::convert::From;
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct IDL {
-    pub version: String,
-    pub name: String,
+    #[serde(default)]
+    pub address: Option<String>,
+    #[serde(default)]
+    pub version: Option<String>,
+    #[serde(default)]
+    pub name: Option<String>,
     #[serde(default)]
     pub instructions: Vec<Instruction>,
     #[serde(default)]
@@ -20,8 +26,41 @@ pub struct IDL {
     pub metadata: Metadata,
 }
 
+impl IDL {
+    pub fn get_address(&self) -> String {
+        match &self.address {
+            Some(a) => a.clone(),
+            None => match self.metadata.address.clone() {
+                Some(a) => a.clone(),
+                None => panic!("Invalid or missing address")
+            }
+        }
+    }
+
+    pub fn get_version(&self) -> String {
+        match &self.version {
+            Some(a) => a.clone(),
+            None => match &self.metadata.version {
+                Some(a) => a.clone(),
+                None => panic!("Invalid or missing version")
+            }
+        }
+    }
+
+    pub fn get_name(&self) -> String {
+        match &self.name {
+            Some(a) => a.clone(),
+            None => match &self.metadata.name {
+                Some(a) => a.clone(),
+                None => panic!("Invalid or missing name")
+            }
+        }
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Data {
+    pub address: String,
     pub version: String,
     pub name: String,
     pub instructions: Vec<Instruction>,
@@ -41,8 +80,9 @@ pub struct Data {
 impl From<IDL> for Data {
     fn from(idl: IDL) -> Self {
         Data {
-            version: idl.version,
-            name: idl.name,
+            address: idl.get_address(),
+            version: idl.get_version(),
+            name: idl.get_name(),
             instructions: idl.instructions,
             accounts: idl.accounts,
             types: idl.types,
@@ -57,8 +97,9 @@ impl From<IDL> for Data {
 impl From<Data> for IDL {
     fn from(idl: Data) -> Self {
         IDL {
-            version: idl.version,
-            name: idl.name,
+            address: Some(idl.address),
+            version: Some(idl.version),
+            name: Some(idl.name),
             instructions: idl.instructions,
             accounts: idl.accounts,
             types: idl.types,
@@ -253,7 +294,7 @@ pub enum InstructionType {
     Array(Box<InstructionType>, usize),
     Bool,
     Bytes,
-    Defined(String),
+    // Defined(String), // Deprecated in 0.30.0
     I128,
     I16,
     I32,
@@ -273,7 +314,16 @@ pub enum InstructionType {
     BTreeMap(Box<InstructionType>, Box<InstructionType>),
     HashSet(Box<InstructionType>),
     BTreeSet(Box<InstructionType>),
+    // 0.30.0 types
+    pubkey,
+    Defined(Value)
 }
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct DefinedType {
+    name: String
+}
+
 
 impl ToString for InstructionType {
     fn to_string(&self) -> String {
@@ -281,7 +331,13 @@ impl ToString for InstructionType {
             InstructionType::Array(t, l) => format!("[{};{}]", t.to_string(), l),
             InstructionType::Bool => "bool".to_string(),
             InstructionType::Bytes => "Vec<u8>".to_string(),
-            InstructionType::Defined(t) => t.clone(),
+            InstructionType::Defined(v) => {
+                match v {
+                    Value::String(_) => v.as_str().unwrap().to_string(), // <0.30.0
+                    Value::Object(_) => v.as_object().unwrap().get("name").unwrap().as_str().unwrap().to_string(), // ^0.30.0
+                    _ => panic!("Invalid IDL")
+                }
+            }
             InstructionType::I128 => "i128".to_string(),
             InstructionType::I16 => "i16".to_string(),
             InstructionType::I32 => "i32".to_string(),
@@ -289,7 +345,7 @@ impl ToString for InstructionType {
             InstructionType::I8 => "i8".to_string(),
             InstructionType::Option(t) => format!("Option<{}>", t.to_string()),
             InstructionType::Tuple(t) => format!("({})", t.iter().map(|t| t.to_string()).collect::<Vec<String>>().join(", ")),
-            InstructionType::PublicKey => "Pubkey".to_string(),
+            InstructionType::pubkey | InstructionType::PublicKey => "Pubkey".to_string(),
             InstructionType::String => "String".to_string(),
             InstructionType::U128 => "u128".to_string(),
             InstructionType::U16 => "u16".to_string(),
@@ -357,7 +413,12 @@ pub struct TypeFields {
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Metadata {
-    pub address: String,
+    #[serde(default)]
+    pub version: Option<String>,
+    #[serde(default)]
+    pub address: Option<String>,
+    #[serde(default)]
+    pub name: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

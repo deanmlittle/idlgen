@@ -101,7 +101,7 @@ default = [\"rpc\", \"i11n\", \"cpi\", \"events\"]
 
 [dependencies]
 anchor-lang = \"0.30.0\"
-anchor-i11n = \"0.1.0\"", idl.name.to_case(Case::Kebab), idl.version, idl.name.to_case(Case::Snake))
+anchor-i11n = \"0.1.0\"", idl.get_name().to_case(Case::Kebab), idl.get_version(), idl.get_name().to_case(Case::Snake))
 }
 
 pub fn make_lib_rs(idl: &IDL) -> String {
@@ -114,11 +114,11 @@ declare_id!(\"{}\");
 {}
 
 // CPI
-#[cfg(feature=\"cpi\")]
+#[cfg(all(target_os = \"solana\", feature=\"cpi\"))]
 {}
 
 // RPC
-#[cfg(feature=\"rpc\")]
+#[cfg(all(not(target_os = \"solana\"), feature=\"cpi\"))]
 pub mod rpc {{
     #![allow(unused)]
     use anchor_lang::prelude::*;
@@ -126,7 +126,7 @@ pub mod rpc {{
 }}
 
 // I11n
-#[cfg(feature=\"i11n\")]
+#[cfg(all(target_os = \"solana\", feature=\"i11n\"))]
 {}
 
 // Instructions
@@ -146,5 +146,5 @@ pub mod events {{
 {}
         
 // Defined types
-{}", idl.metadata.address, make_cpi_accounts(idl), make_cpi_ctxs(idl), make_rpc_accounts(idl), make_i11n_ctxs(idl), make_ixs(idl), make_events(idl), make_accounts(idl), make_defined_types(idl))
+{}", idl.get_address(), make_cpi_accounts(idl), make_cpi_ctxs(idl), make_rpc_accounts(idl), make_i11n_ctxs(idl), make_ixs(idl), make_events(idl), make_accounts(idl), make_defined_types(idl))
 }

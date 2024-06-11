@@ -49,19 +49,19 @@ struct Args {
 fn make(idl: &IDL, package: &Package) -> Result<()> {
     match package {
         Package::File => {
-            let mut file = File::create(format!("{}.rs", idl.name.to_case(Case::Snake)))?;
+            let mut file = File::create(format!("{}.rs", idl.get_name().to_case(Case::Snake)))?;
             file.write_all(make_lib_rs(idl).as_bytes())?;
         },
         Package::Crate => {
-            create_dir_all(format!("{}/src", idl.name.to_case(Case::Snake)))?;
-            let mut toml_file: File = File::create(format!("{}/Cargo.toml", idl.name.to_case(Case::Snake)))?;
+            create_dir_all(format!("{}/src", idl.get_name().to_case(Case::Snake)))?;
+            let mut toml_file: File = File::create(format!("{}/Cargo.toml", idl.get_name().to_case(Case::Snake)))?;
             toml_file.write_all(make_cargo_toml(idl).as_bytes())?;
 
-            let mut lib_file: File = File::create(format!("{}/src/lib.rs", idl.name.to_case(Case::Snake)))?;
+            let mut lib_file: File = File::create(format!("{}/src/lib.rs", idl.get_name().to_case(Case::Snake)))?;
             lib_file.write_all(make_lib_rs(idl).as_bytes())?;
         },
         Package::Zip => {
-            let file = File::create(format!("{}.zip", idl.name.to_case(Case::Snake)))?;
+            let file = File::create(format!("{}.zip", idl.get_name().to_case(Case::Snake)))?;
 
             let mut zip = ZipWriter::new(file);
 
@@ -73,7 +73,7 @@ fn make(idl: &IDL, package: &Package) -> Result<()> {
             zip.finish()?;
         },
     }
-    println!("✅ Successfully generated {} for {} v{}", package.to_string(), idl.name, idl.version);
+    println!("✅ Successfully generated {} for {} v{}", package.to_string(), idl.get_name(), idl.get_version());
     Ok(())
 }
 

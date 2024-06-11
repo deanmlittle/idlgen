@@ -1,0 +1,20 @@
+[package]
+name = "zeta-sdk"
+version = "0.1.0"
+description = "Created with IDLGen"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "zeta_sdk"
+
+[features]
+rpc = []
+i11n = []
+cpi = []
+events = []
+default = ["rpc", "i11n", "cpi", "events"]
+
+[dependencies]
+anchor-lang = "0.30.0"
+anchor-i11n = "0.1.0"
