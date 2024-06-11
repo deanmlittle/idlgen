@@ -1,26 +1,37 @@
 use convert_case::{Case, Casing};
 
-use crate::{generators::{accounts::make_accounts, cpi::{make_cpi_accounts, make_cpi_ctxs}, events::make_events, i11n::make_i11n_ctxs, rpc::make_rpc_accounts}, types::Instruction, IDL};
+use crate::{generators::{accounts::make_accounts, cpi::{make_cpi_accounts, make_cpi_ctxs}, events::make_events, i11n::make_i11n_ctxs, rpc::make_rpc_accounts}, types::{Instruction, Type, Types}, IDL};
 
 pub fn make_defined_types(idl: &IDL) -> String {
     idl.types.iter().map(|t| {
-        let ty = if t.kind.kind == "enum" {
+        if t.kind.kind == "enum" {
+            make_defined_types_enum(t.clone())
+        } else if t.kind.kind == "struct" {
+            make_defined_types_struct(t.clone())
+        } else {
+            panic!("Unknown defined type: {}", t.kind.kind);
+        }
+    }).collect::<Vec<String>>().join("\n\n")
+}
+
+pub fn make_defined_types_enum(t: Types) -> String {
     format!("#[derive(Clone, AnchorSerialize, AnchorDeserialize, Copy, PartialEq, Eq)]
 pub enum {} {{
 {}
 }}", t.name, t.kind.variants.clone().unwrap_or(vec![]).iter().map(|n| format!("    {}", n.name.to_case(Case::Pascal))).collect::<Vec<String>>().join(",\n"))
-        } else if t.kind.kind == "struct" {
-            format!("#[derive(Clone, AnchorSerialize, AnchorDeserialize)]
+}
+
+pub fn make_defined_types_struct(t: Types) -> String {
+    format!("#[derive(Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct {} {{
 {}
-}}", t.name, t.kind.fields.clone().unwrap_or(vec![]).iter().map(|f| {
+}}", t.name, make_defined_types_fields(t.clone()))
+}
+
+pub fn make_defined_types_fields(t: Types) -> String {
+    t.kind.fields.clone().unwrap_or(vec![]).iter().map(|f| {
         format!("    pub {}: {},", f.name.to_case(Case::Snake), f.kind.to_string())
-    }).collect::<Vec<String>>().join("\n"))
-        } else {
-            panic!("Unknown defined type: {}", t.kind.kind);
-        };
-        ty
-    }).collect::<Vec<String>>().join("\n\n")
+    }).collect::<Vec<String>>().join("\n")
 }
 
 pub fn make_ixs(idl: &IDL) -> String {
@@ -81,6 +92,10 @@ pub fn make_ix_has_info(ix: &Instruction) -> String {
     }
 }
 
+pub fn indent(s: String) -> String {
+    s.lines().into_iter().map(|s| format!("    {}", s)).collect::<Vec<String>>().join("\n")
+}
+
 pub fn make_cargo_toml(idl: &IDL) -> String {
     format!("[package]
 name = \"{}-sdk\"
@@ -94,14 +109,14 @@ name = \"{}_sdk\"
 
 [features]
 rpc = []
-i11n = []
+i11n = [\"anchor-i11n\"]
 cpi = []
 events = []
 default = [\"rpc\", \"i11n\", \"cpi\", \"events\"]
 
 [dependencies]
 anchor-lang = \"0.30.0\"
-anchor-i11n = \"0.1.0\"", idl.get_name().to_case(Case::Kebab), idl.get_version(), idl.get_name().to_case(Case::Snake))
+anchor-i11n = {{ optional = true, version = \"0.1.0\"}}", idl.get_name().to_case(Case::Kebab), idl.get_version(), idl.get_name().to_case(Case::Snake))
 }
 
 pub fn make_lib_rs(idl: &IDL) -> String {
