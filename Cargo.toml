@@ -1,4 +1,3 @@
-workspace = { members = ["tests/use_zeta"] }
 [package]
 name = "idlgen"
 authors = ["Dean Little <@deanmlittle>"]
