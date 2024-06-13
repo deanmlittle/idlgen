@@ -14,18 +14,19 @@ pub fn make_events(idl: &IDL) -> String {
             false => make_event_props(event)
         };
         
-        format!("    #[derive(AnchorDiscriminator, AnchorSerialize, AnchorDeserialize)]
-    pub struct {} {{
+        format!("#[cfg_attr(not(target_os=\"solana\"), derive(Debug))]
+#[derive(AnchorDiscriminator, AnchorSerialize, AnchorDeserialize)]
+pub struct {} {{
 {}
-    }}
+}}
     
-    impl anchor_lang::Event for {} {{
-        fn data(&self) -> Vec<u8> {{
-            let mut data = Self::DISCRIMINATOR.to_vec();
-            self.serialize(&mut data).unwrap();
-            data
-        }}
-    }}", event_name_pascal, fields, event_name_pascal)
+impl anchor_lang::Event for {} {{
+    fn data(&self) -> Vec<u8> {{
+        let mut data = Self::DISCRIMINATOR.to_vec();
+        self.serialize(&mut data).unwrap();
+        data
+    }}
+}}", event_name_pascal, indent(fields), event_name_pascal)
     }).collect::<Vec<String>>().join("\n\n")
 }
 

@@ -15,14 +15,16 @@ pub fn make_defined_types(idl: &IDL) -> String {
 }
 
 pub fn make_defined_types_enum(t: Types) -> String {
-    format!("#[derive(Clone, AnchorSerialize, AnchorDeserialize, Copy, PartialEq, Eq)]
+    format!("#[cfg_attr(not(target_os=\"solana\"), derive(Debug))]
+#[derive(Clone, AnchorSerialize, AnchorDeserialize, Copy, PartialEq, Eq)]
 pub enum {} {{
 {}
 }}", t.name, t.kind.variants.clone().unwrap_or(vec![]).iter().map(|n| format!("    {}", n.name.to_case(Case::Pascal))).collect::<Vec<String>>().join(",\n"))
 }
 
 pub fn make_defined_types_struct(t: Types) -> String {
-    format!("#[derive(Clone, AnchorSerialize, AnchorDeserialize)]
+    format!("#[cfg_attr(not(target_os=\"solana\"), derive(Debug))]
+#[derive(Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct {} {{
 {}
 }}", t.name, make_defined_types_fields(t.clone()))
@@ -161,5 +163,5 @@ pub mod events {{
 {}
         
 // Defined types
-{}", idl.get_address(), make_cpi_accounts(idl), make_cpi_ctxs(idl), make_rpc_accounts(idl), make_i11n_ctxs(idl), make_ixs(idl), make_events(idl), make_accounts(idl), make_defined_types(idl))
+{}", idl.get_address(), make_cpi_accounts(idl), make_cpi_ctxs(idl), indent(make_rpc_accounts(idl)), make_i11n_ctxs(idl), make_ixs(idl), indent(make_events(idl)), make_accounts(idl), make_defined_types(idl))
 }

@@ -22,14 +22,16 @@ pub fn make_rpc_accounts(idl: &IDL) -> String {
         }).collect::<Vec<String>>().join("\n");
         let rpc_account = match account_names.len() == 0 {
             true => {
-                format!("    #[derive(AnchorSerialize)]
-    pub struct {} {{}}", ix_name_pascal)
-            },
-            false => {
-                format!("    #[derive(AnchorSerialize)]
-    pub struct {} {{
+                format!("#[cfg_attr(not(target_os=\"solana\"), derive(Debug))]
+#[derive(AnchorSerialize)]
+pub struct {} {{}}", ix_name_pascal)
+        },
+        false => {
+            format!("#[cfg_attr(not(target_os=\"solana\"), derive(Debug))]
+#[derive(AnchorSerialize)]
+pub struct {} {{
 {}
-    }}", ix_name_pascal, account_names)
+}}", ix_name_pascal, account_names)
             }
         };
 
